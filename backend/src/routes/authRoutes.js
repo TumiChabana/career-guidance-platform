@@ -3,7 +3,6 @@ const router = express.Router();
 const { 
   register, 
   login, 
-  verifyEmail, 
   getMe, 
   updateProfile 
 } = require('../controllers/authController');
@@ -12,7 +11,6 @@ const { protect } = require('../middleware/auth');
 // Public routes
 router.post('/register', register);
 router.post('/login', login);
-router.get('/verify-email/:token', verifyEmail);
 
 // Protected routes
 router.get('/me', protect, getMe);

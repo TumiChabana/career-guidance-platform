@@ -1,7 +1,5 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -9,15 +7,6 @@ const generateToken = (id) => {
     expiresIn: '30d'
   });
 };
-
-// Email transporter (using Gmail - for production use proper email service)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -32,15 +21,12 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Generate email verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-
     // Create user object based on role
     const userData = {
       email,
       password,
       role,
-      emailVerificationToken: verificationToken
+      isEmailVerified: true  // Auto-verified for demo
     };
 
     // Add role-specific profile data
@@ -55,29 +41,9 @@ exports.register = async (req, res) => {
     // Create user
     const user = await User.create(userData);
 
-    // Send verification email
-    const verificationUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email/${verificationToken}`;
-    
-    try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Email Verification - Career Guidance Platform',
-        html: `
-          <h2>Welcome to Career Guidance Platform!</h2>
-          <p>Please click the link below to verify your email address:</p>
-          <a href="${verificationUrl}">${verificationUrl}</a>
-          <p>This link will expire in 24 hours.</p>
-        `
-      });
-    } catch (emailError) {
-      console.log('Email sending failed:', emailError);
-      // Continue registration even if email fails
-    }
-
     res.status(201).json({
       success: true,
-      message: 'Registration successful! Please check your email to verify your account.',
+      message: 'Registration successful! You can now login.',
       user: {
         id: user._id,
         email: user.email,
@@ -120,33 +86,6 @@ exports.login = async (req, res) => {
         isEmailVerified: user.isEmailVerified
       },
       token: generateToken(user._id)
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc    Verify email
-// @route   GET /api/auth/verify-email/:token
-// @access  Public
-exports.verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-
-    const user = await User.findOne({ emailVerificationToken: token });
-
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired verification token' });
-    }
-
-    user.isEmailVerified = true;
-    user.emailVerificationToken = undefined;
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Email verified successfully! You can now login.'
     });
 
   } catch (error) {

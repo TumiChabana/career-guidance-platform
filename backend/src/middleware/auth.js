@@ -41,13 +41,3 @@ exports.authorize = (...roles) => {
     next();
   };
 };
-
-// Email verification check
-exports.requireEmailVerification = (req, res, next) => {
-  if (!req.user.isEmailVerified) {
-    return res.status(403).json({ 
-      message: 'Please verify your email address to access this resource' 
-    });
-  }
-  next();
-};
