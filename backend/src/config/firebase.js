@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
+const path = require('path');
 
 // Check if running in production
 const serviceAccountPath = process.env.NODE_ENV === 'production'
