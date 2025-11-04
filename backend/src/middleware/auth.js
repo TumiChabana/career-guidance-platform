@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { db } = require('../config/firebase');
 
 // Verify JWT token
 exports.protect = async (req, res, next) => {
@@ -17,13 +17,17 @@ exports.protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Get user from token
-    req.user = await User.findById(decoded.id).select('-password');
+    // Get user from Firestore
+    const userDoc = await db.collection('users').doc(decoded.id).get();
     
-    if (!req.user) {
+    if (!userDoc.exists) {
       return res.status(401).json({ message: 'User not found' });
     }
 
+    const user = { id: userDoc.id, ...userDoc.data() };
+    delete user.password;
+    
+    req.user = user;
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Not authorized, token failed' });

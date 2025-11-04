@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./src/config/database');
 
 // Load environment variables
 dotenv.config();
@@ -18,14 +17,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Connect to database
-connectDB();
+// Initialize Firebase (just by importing)
+const { db } = require('./src/config/firebase');
 
-// Routes
+// Test route
 app.get('/api/test', (req, res) => {
-  res.json({ message: '✅ Backend is working!' });
+  res.json({ message: '✅ Backend is working with Firestore!' });
 });
 
+// Routes
 app.use('/api/auth', require('./src/routes/authRoutes'));
 
 // Error handler
@@ -38,4 +38,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🔥 Firestore connected successfully!`);
 });
