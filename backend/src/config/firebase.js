@@ -1,12 +1,14 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
 
-// Check if running in production
-const serviceAccountPath = process.env.NODE_ENV === 'production'
-  ? '/etc/secrets/serviceAccountKey.json'
-  : path.join(__dirname, 'serviceAccountKey.json');
+let serviceAccount;
 
-const serviceAccount = require(serviceAccountPath);
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  // Production: use environment variable
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+  // Development: use local file
+  serviceAccount = require('./serviceAccountKey.json');
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
